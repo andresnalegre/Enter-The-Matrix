@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Matrix</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: black;
+      color: #0F0;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #typingText {
+      font-size: 1.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #0F0;
+      width: fit-content;
+      animation: blinkCursor 0.8s step-end infinite;
+      z-index: 10;
+    }
+
+    .hidden { display: none; }
+
+    @keyframes blinkCursor {
+      0% { border-color: #0F0; }
+      50% { border-color: transparent; }
+      100% { border-color: #0F0; }
+    }
+
+    .social-icons {
+      position: absolute;
+      display: none;
+      top: 60%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 2s;
+      z-index: 5;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .social-icon {
+      width: 36px;
+      height: 36px;
+      transition: transform 0.3s;
+    }
+
+    .social-icon:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="typingText"></div>
+  <canvas id="matrixCanvas" class="hidden"></canvas>
+
+  <div class="social-icons" id="social-links">
+    <a href="https://github.com/andresnalegre" target="_blank">
+      <img src="assets/github-icon.png" alt="GitHub" class="social-icon"/>
+    </a>
+    <a href="https://www.linkedin.com/in/andresni/" target="_blank">
+      <img src="assets/linkedin-icon.png" alt="LinkedIn" class="social-icon"/>
+    </a>
+    <a href="https://www.codecademy.com/profiles/andresnicolas" target="_blank">
+      <img src="assets/codeacademy-icon.png" alt="Codecademy" class="social-icon"/>
+    </a>
+  </div>
+  
+  <audio id="matrixAudio" src="Matrix Soundtrack.mp3" preload="auto" loop muted></audio>
+
+  <script src="script.js"></script>
+  <script>
+    const messages = ["Wake up, Neo...", "The Matrix has you..."];
+    const typingText = document.getElementById("typingText");
+    const socialLinks = document.getElementById("social-links");
+    let charIndex = 0;
+
+    function typeMessage(message, callback) {
+      charIndex = 0;
+
+      function type() {
+        typingText.textContent = message.slice(0, charIndex);
+        if (charIndex <= message.length) {
+          charIndex++;
+          setTimeout(type, 100);
+        } else if (callback) {
+          setTimeout(callback, 500);
+        }
+      }
+      type();
+    }
+
+    function deleteMessage(callback) {
+      function deleteChar() {
+        typingText.textContent = typingText.textContent.slice(0, charIndex);
+        if (charIndex >= 0) {
+          charIndex--;
+          setTimeout(deleteChar, 50);
+        } else if (callback) {
+          callback();
+        }
+      }
+      deleteChar();
+    }
+
+    function startSequence() {
+      typeMessage(messages[0], () => {
+        document.addEventListener("click", handleInteraction, { once: true });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === " " || event.key === "Enter") {
+            handleInteraction();
+          }
+        }, { once: true });
+      });
+    }
+
+    function handleInteraction() {
+      deleteMessage(() => {
+        setTimeout(showSecondMessage, 500);
+      });
+    }
+
+    function showSecondMessage() {
+      typeMessage(messages[1], () => {
+        typingText.classList.add("blink");
+        setTimeout(startMatrixExperience, 1000);
+      });
+    }
+
+    function startMatrixExperience() {
+      const matrixAudio = document.getElementById("matrixAudio");
+      const matrixCanvas = document.getElementById("matrixCanvas");
+
+      typingText.classList.add("hidden");
+      matrixCanvas.classList.remove("hidden");
+
+      const matrixAnimation = new MatrixRain("matrixCanvas");
+
+      matrixAudio.currentTime = 34.8;
+      matrixAudio.muted = false;
+      matrixAudio.play().catch((error) => {
+        console.log("Autoplay bloqueado. Tente ativar o áudio manualmente.");
+      });
+
+      setTimeout(() => {
+        matrixAnimation.typeText("ENTER THE MATRIX");
+        setTimeout(() => {
+          socialLinks.style.display = "flex";
+          socialLinks.style.opacity = 1;
+        }, 2000);
+      }, 5000);
+    }
+
+    window.addEventListener("load", startSequence);
+  </script>
+</body>
+
+</html>
